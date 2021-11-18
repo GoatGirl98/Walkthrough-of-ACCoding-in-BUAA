@@ -34,7 +34,7 @@ void wr(ll x)
 // Template From Nyaan : https://n...content-available-to-author-only...b.io/library/data-structure/van-emde-boas-tree.hpp
 namespace vEB_tree_impl
 {
-    using u64 = uint64_t;
+    using u64 = u_int64_t;
     static constexpr unsigned int lgW = 6;
     static constexpr unsigned int W = 1u << lgW;
     static constexpr int inf = 1 << 30;
