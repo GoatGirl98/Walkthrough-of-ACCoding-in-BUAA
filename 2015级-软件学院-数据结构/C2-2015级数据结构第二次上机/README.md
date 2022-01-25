@@ -135,9 +135,9 @@ C语言选手正常的手动模拟排序去重即可
 
 大家都知道，Z君喜欢数学。这天，他的高数老师给了他一个奇怪的函数 **f :R→R**，当这个函数满足：存在一个实常数**K**，对于任意的 **x,y∈R** ，使得 **| f(x) - f(y) | ≤ K \* | x - y |** 时，我们称这个函数为[*Lipschitz continuous*](https://en.wikipedia.org/wiki/Lipschitz_continuity) 。 Z君觉得这个函数太难了，他决定先从数组开始研究。对于一个数组h[1..n]，我们定义Lipschitz 常数L(h):
 
-1.如果n<2，![img](http://img.blog.csdn.net/20160308100826831?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQv/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center)
+1.如果n<2， $L(h)=0$ 
 
-2.如果n≥2，![img](http://img.blog.csdn.net/20160308100648654?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQv/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center)
+2.如果n≥2， $L(h) =\max \lceil \dfrac{|h[j]-h[i]|}{j-i} \rceil$ 
 
 换句话说，L=L(h)是对于所有的**1 ≤ i, j ≤ n**使得**|h[i] - h[j]| ≤ L\*|i - j|**成立的最小非负整数。
 

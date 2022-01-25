@@ -467,7 +467,7 @@ gg
 
 GPA，或称平均学分绩点，是世界上比较通用的比较不同学生学习整体成果的指标。北航的GPA采用4分制，算法如下：
 
-设百分制成绩为x，相应的![img](http://latex.codecogs.com/png.latex?GPA=4-\frac{3%C3%97(100-x)^2}{1600}(60\leq{x}\leq{100}))，60分GPA为1，60分以下为0。现输入N个百分制成绩x1，x2...xN（1≤N≤100，N为正整数），对应的学分分别为h1，h2...hN。通过各科目GPA计算总GPA的公式为：
+设百分制成绩为x，相应的 $GPA=4-\frac{3%C3%97(100-x)^2}{1600}(60\leq{x}\leq{100})$ )，60分GPA为1，60分以下为0。现输入N个百分制成绩x1，x2...xN（1≤N≤100，N为正整数)，对应的学分分别为h1，h2...hN。通过各科目GPA计算总GPA的公式为：
 
 > ![img](http://latex.codecogs.com/png.latex?\frac{GPA_1h_1+GPA_2h_2+\cdots+GPA_Nh_N}{h_1+h_2+\cdots+h_N})
 
