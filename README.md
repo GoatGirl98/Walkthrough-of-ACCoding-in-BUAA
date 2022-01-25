@@ -66,11 +66,11 @@ authored by GoatGirl98
 | 18   | 	2019级-理科-大学计算机基础   | 部分开放   | **更新完毕** |
 | 19   | 	2019级-软件学院-离散数学(II)   | 不开放   | **更新完毕** |
 | 20   | 	2020秋-计算机导论（英文）   | 完全开放   | **更新完毕** |
-| 21   | 2020级-信息大类-程序设计基础训练<sup>**</sup>   | 不开放 | **更新完毕** |                      |
+| 21   | 2020级-信息大类-程序设计基础训练<sup>**</sup>   | 不开放 | **更新完毕** |
 | 22   | 2020级-航空航天大类-C语言程序设计<sup>**</sup>   | 部分开放 | **更新完毕** |
 | 23   | 2021春-沙河高校联盟课-C语言程序设计  | 部分开放 | **更新完毕** |
 | 24   | 2021春-河南师范大学-Python语言程序设计  | 部分开放 | **更新完毕** |
-| 25   | 2021级-信息大类-程序设计基础训练<sup>**</sup>   | 不开放 | **正在更新** |
+| 25   | 2021级-信息大类-程序设计基础训练<sup>**</sup>   | 不开放 | **更新完毕** |
 | 26   | Other-其他比赛   | 部分开放 | **随时更新** |
 
 
@@ -305,18 +305,18 @@ UC Berkeley的教授Brian Harvey在课堂上向他的学生解释为什么不要
 
 - **1006** DShawn
 - **1421** shiyi microhhh Magry 王木木
-- **1521** dama modricWang mdd gzh DH AlvinZH redundant bamboo
+- **1521** 轻型王助教 modricWang mdd gzh DH AlvinZH redundant bamboo
 - **1606** coldwater gst
 - **1621** TQ QZZ yhy
 - **1706** 影佑 QQL zhuziyu-edward MountVoom 
 - **1721** rty mogg 宿命的轮回者
 - **1806** dragonLee potassium
-- **1818** myx
+- **1818** 空游无所依
 - **1821** wy qrn yhb aikx Kevin00 qxforever Great-designer
-- **1906** Pantw dhy
-- **1917** 凉宫秋月
+- **1906** Pantw dhy2000
 - **1921** 我要回幼儿园当学霸 小迷弟
 - **1942** 流转起舞
+- **2002** 凉宫秋月
 - 各位在出题前线brainstorm以及留下题解的助教们
 - 以及其他我见过博客交流过但是忘记了姓名的同学
 
