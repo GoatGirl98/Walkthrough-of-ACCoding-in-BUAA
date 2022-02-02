@@ -1,14 +1,8 @@
-#include <iostream>
+#include <stdio.h>
 #define INF 20010
-
-using namespace std;
-
 typedef long long LL;
-
-int two[INF] = { 0 }, five[INF] = { 0 };
-
+int two[INF], five[INF];
 int delete25[INF];
-
 int main() {
 
     delete25[0] = 1;
@@ -55,9 +49,6 @@ int main() {
                 result %= 10000000000;
             }
         }
-
         printf("%010lld\n", result);
-
     }
-
 }
