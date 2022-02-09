@@ -1,51 +1,107 @@
-// g++ -std=c++11 -O2
 #include <stdio.h>
-#include <assert.h>
-#include <math.h>
 #include <string.h>
+#include <math.h>
+#include <assert.h>
 typedef long long ll;
-typedef unsigned long long ull;
 typedef __int128_t lll;
-namespace FFT_Solver
+// NTT Solver : use for multiple case : n | (p - 1)
+// primitive root : 3
+// 998244353  (2^23 * 7 * 17 + 1)
+// 1004535809 (2^21 * 479 + 1)
+// 1007681537 (2^20 * 31^2 + 1)
+// 1051721729 (2^20 * 17 * 59 + 1)
+namespace Arbitrary_NTT_Solver
 {
-    struct complex
+    // int arbitrary_mod;
+    inline int add(int a, int b, int p) { return (a + b >= p) ? (a + b - p) : (a + b); }
+    inline int sub(int a, int b, int p) { return (a < b) ? (a - b + p) : (a - b); }
+    inline int qpow(int a, int b, int p)
     {
-        double a, b; // a : real number b : imaginary number
-        double len() const { return a * a + b * b; }
-        complex operator+(const complex &o) const { return {a + o.a, b + o.b}; }
-        complex operator-(const complex &o) const { return {a - o.a, b - o.b}; }
-        complex operator-() const { return {-a, -b}; }
-        complex operator*(const double &o) const { return {a * o, b * o}; }
-        complex operator*(const complex &o) const { return {a * o.a - b * o.b, b * o.a + a * o.b}; }
-        complex operator/(const double &o) const { return {a / o, b / o}; }
-        complex operator!() const { return {a, -b}; } // conjugate
-        complex operator/(const complex &o) const { return ((*this) * (!o)) / o.len(); }
+        int ret = 1;
+        while (b)
+        {
+            if (b & 1)
+                ret = (1ll * ret * a) % p;
+            b >>= 1;
+            a = (1ll * a * a) % p;
+        }
+        return ret;
+    }
+    const int N = (1 << 11) | 3;
+    // modulo 3
+    const int M[3] = {1004535809, 1007681537, 1045430273}, proot = 3;
+    const lll all_mod = (lll)1004535809 * (lll)1007681537 * (lll)1045430273;
+    const lll MP[3] = {all_mod + (lll)1053460784322969601ll * (lll)(-480795620), all_mod + (lll)1050172145041145857ll * (lll)(-401215089), all_mod + (lll)1012252187984658433ll * (lll)(-128816555)};
+    struct MOD3
+    {
+        int reminder[3];
+        // assume val is lesser than mod
+        void init(ll val)
+        {
+            for (int i = 0; i < 3; ++i)
+                reminder[i] = (val < M[i]) ? val : (val % M[i]);
+        }
+        MOD3 inv() const
+        {
+            MOD3 ret;
+            for (int i = 0; i < 3; ++i)
+                ret.reminder[i] = qpow(reminder[i], M[i] - 2, M[i]);
+            return ret;
+        }
+        MOD3 operator+(const MOD3 &o) const
+        {
+            MOD3 ret;
+            for (int i = 0; i < 3; ++i)
+                ret.reminder[i] = add(reminder[i], o.reminder[i], M[i]);
+            return ret;
+        }
+        MOD3 operator-(const MOD3 &o) const
+        {
+            MOD3 ret;
+            for (int i = 0; i < 3; ++i)
+                ret.reminder[i] = sub(reminder[i], o.reminder[i], M[i]);
+            return ret;
+        }
+        MOD3 operator*(const MOD3 &o) const
+        {
+            MOD3 ret;
+            for (int i = 0; i < 3; ++i)
+                ret.reminder[i] = (1ll * reminder[i] * o.reminder[i]) % M[i];
+            return ret;
+        }
+        lll val() const
+        {
+            lll ret = 0;
+            for (int i = 0; i < 3; ++i)
+                ret = (ret + MP[i] * reminder[i]) % all_mod;
+            return ret;
+        }
     };
-    const int N = (1 << 12) | 3;
-    const double PI = acos(-1.0);
+
     bool initialized;
     int L, brev[N]; // Butterfly operation
-    complex w[N], v[N];
-    complex com_a[N], com_b[N];
+    MOD3 w[N], v[N], mod_a[N], mod_b[N];
     void init(int _L)
     {
-        L = _L, initialized = 1;
+        L = _L;
+        initialized = 1;
+        for (int i = 0; i < 3; ++i)
+            assert(!((M[i] - 1) & ((1 << L) - 1)));
         for (int i = 0; i < (1 << L); ++i)
             brev[i] = (brev[i >> 1] >> 1) | ((i & 1) << (L - 1));
-        for (int i = 0; i < (1 << L); ++i)
-        {
-            w[i] = {cos(i * PI * 2 / (1 << L)), sin(i * PI * 2 / (1 << L))};
-            v[i] = {cos(i * PI * 2 / (1 << L)), -sin(i * PI * 2 / (1 << L))};
-        }
+        w[0].init(1), v[0].init(1);
+        for (int i = 0; i < 3; ++i)
+            w[1].reminder[i] = qpow(proot, (M[i] - 1) >> L, M[i]);
+        v[1] = w[1].inv();
+        for (int i = 2; i < (1 << L); ++i)
+            w[i] = w[i - 1] * w[1], v[i] = v[i - 1] * v[1];
     }
- 
     struct initializer
     {
         // length is adjustable
-        initializer() { init(12); }
-    }fft_init;
- 
-    void fft(complex a[], int lgn, int flag)
+        initializer() { init(11); }
+    } arbitrary_ntt_init;
+    void arbitrary_ntt(MOD3 a[], int lgn, int flag)
     {
         int n = 1 << lgn;
         for (int i = 0; i < n; ++i)
@@ -53,79 +109,53 @@ namespace FFT_Solver
             int rv = brev[i] >> (L - lgn);
             if (rv < i)
             {
-                // std::swap(a[rv], a[i]);
-                complex tmp = a[rv];
+                MOD3 tmp = a[rv];
                 a[rv] = a[i], a[i] = tmp;
             }
         }
- 
         int fa = L;
-        complex *q = (flag == 1) ? w : v;
- 
+        MOD3 *q = (flag == 1) ? w : v;
         for (int t = 1; t < n; t <<= 1)
         {
             --fa;
- 
-            for (int i = 0; i < n; i += t << 1)
+            for (int i = 0; i < n; i += (t << 1))
             {
-                complex *p = a + i;
- 
+                MOD3 *p = a + i;
                 for (int j = 0; j < t; ++j)
                 {
-                    complex x = p[j + t] * q[j << fa];
+                    MOD3 x = p[j + t] * q[j << fa];
                     p[j + t] = p[j] - x, p[j] = p[j] + x;
                 }
             }
         }
- 
+
         if (flag == -1)
-            for (int i = 0; i < n; ++i)
-                a[i] = {a[i].a / n, a[i].b / n};
-    }
- 
-    void fft_two_seq(complex a[], complex b[], int lgn, int flag)
-    {
-        int n = 1 << lgn;
- 
-        for (int i = 0; i < n; ++i)
-            a[i].b = b[i].a;
- 
-        fft(a, lgn, flag);
- 
-        b[0] = !a[0];
- 
-        for (int i = 1; i < n; ++i)
-            b[i] = !a[n - i];
- 
-        for (int i = 0; i < n; ++i)
         {
-            complex x = a[i], y = b[i];
-            a[i] = {(x.a + y.a) / 2.0, (x.b + y.b) / 2.0};
-            b[i] = (x - y) / (complex){0, 2};
+            MOD3 inv_n;
+            inv_n.init(n), inv_n = inv_n.inv();
+            for (int i = 0; i < n; ++i)
+                a[i] = a[i] * inv_n;
         }
     }
- 
-    // a[0...n] * b[0...m] (assume that res is all zero)
-    void mul(int a[], int n, int b[], int m, int res[], int mod, int *res_len)
+    void mul(ll a[], int n, ll b[], int m, ll res[], ll mod, int *res_len)
     {
         // multiple case
         assert((*res_len) >= n + m + 1);
         memset(res, 0, sizeof(res[0]) * (*res_len));
- 
         // brute force
         if (n < 100 / (m + 1) || n < 3 || m < 3)
             for (int i = 0; i <= n; ++i)
                 for (int j = 0; j <= m; ++j)
                 {
                     // res[i + j] += a[i] * b[j];
-                    ll x = 1ll * res[i + j] + (1ll * a[i] * b[j]);
+                    lll x = (lll)res[i + j] + (lll)a[i] * (lll)b[j];
                     res[i + j] = 0;
                     int offset = 0;
                     while (x >= mod)
                         res[i + j + offset] += (x % mod), x /= mod, ++offset;
-                    res[i + j + offset] += x;                   
-                }   
-        // FFT
+                    res[i + j + offset] += x;
+                }
+        // Arbitrary NTT
         else
         {
             assert(initialized);
@@ -133,26 +163,25 @@ namespace FFT_Solver
             while ((1 << lgk) <= len)
                 ++lgk, k <<= 1;
             for (int i = 0; i <= n; ++i)
-                com_a[i].a = a[i], com_a[i].b = 0.0;
+                mod_a[i].init(a[i]);
             for (int i = 0; i <= m; ++i)
-                com_b[i].a = b[i], com_b[i].b = 0.0;
+                mod_b[i].init(b[i]);
             // multiple_case
-            memset(com_a + (n + 1), 0, sizeof(com_a[0]) * (k - n - 1));
-            memset(com_b + (m + 1), 0, sizeof(com_b[0]) * (k - m - 1));
- 
-            fft_two_seq(com_a, com_b, lgk, 1);
+            memset(mod_a + (n + 1), 0, sizeof(MOD3) * (k - n - 1));
+            memset(mod_b + (m + 1), 0, sizeof(MOD3) * (k - m - 1));
+
+            arbitrary_ntt(mod_a, lgk, 1), arbitrary_ntt(mod_b, lgk, 1);
             for (int i = 0; i < k; ++i)
-                com_a[i] = com_a[i] * com_b[i];
-            fft(com_a, lgk, -1);
+                mod_a[i] = mod_a[i] * mod_b[i];
+            arbitrary_ntt(mod_a, lgk, -1);
             for (int i = 0; i <= n + m; ++i)
             {
-                ll x = 1ll * res[i] + (ll)(com_a[i].a + 0.5);
+                lll x = (lll)res[i] + mod_a[i].val();
                 res[i] = 0;
                 int offset = 0;
                 while (x >= mod)
                     res[i + offset] += (x % mod), x /= mod, ++offset;
                 res[i + offset] += x;
-                // res[i] = (ll)(com_a[i].a + 0.5);
             }
         }
         // adjust by mod
@@ -165,30 +194,28 @@ namespace FFT_Solver
             --(*res_len);
     }
 }
- 
- 
 // base radix : 8
 struct BigNumber
 {
-    const int digit[6] = {1, 8, 64, 512, 4096, 32768}, MODD = 5;
-    static const int MOD = 32768, base_radix = 8;
- 
+    const ll digit[13] = {1ll, 8ll, 64ll, 512ll, 4096ll, 32768ll, 262144ll, 2097152ll, 16777216ll, 134217728ll, 1073741824ll, 8589934592ll, 68719476736ll}, MODD = 12;
+    static const ll MOD = 68719476736ll, base_radix = 8;
+
     int len;
     bool f;
-    int *a;
+    ll *a;
     BigNumber() { a = NULL; }
 
     BigNumber(const char *s)
     {
         int slen = strlen(s);
-        a = new int[slen / MODD + 2];
+        a = new ll[slen / MODD + 2];
         len = 0, f = true;
         int start = 0;
         if (s[0] == '+')
             start = 1;
         else if (s[0] == '-')
             start = 1, f = false;
-        int sum = 0, k = 0;
+        ll sum = 0, k = 0;
         for (int i = slen - 1; i >= start; i--)
         {
             sum += (s[i] ^ '0') * digit[k++];
@@ -203,8 +230,8 @@ struct BigNumber
 
     BigNumber(const BigNumber &p)
     {
-        len = p.len, f = p.f, a = new int[len];
-        memcpy(a, p.a, len * sizeof(int));
+        len = p.len, f = p.f, a = new ll[len];
+        memcpy(a, p.a, len * sizeof(ll));
     }
 
     void operator=(const BigNumber &p)
@@ -212,10 +239,10 @@ struct BigNumber
         if (a != NULL)
             delete a;
         len = p.len, f = p.f;
-        a = new int[len];
-        memcpy(a, p.a, len * sizeof(int));
+        a = new ll[len];
+        memcpy(a, p.a, len * sizeof(ll));
     }
- 
+
     BigNumber operator*(const BigNumber &p) const
     {
         if ((this->len == 1 && this->a[0] == 0) || (p.len == 1 && p.a[0] == 0))
@@ -223,8 +250,8 @@ struct BigNumber
         BigNumber ret;
         ret.f = !(f ^ p.f);
         ret.len = len + p.len + 5;
-        ret.a = new int[ret.len];
-        FFT_Solver::mul(a, len - 1, p.a, p.len - 1, ret.a, MOD, &ret.len);
+        ret.a = new ll[ret.len];
+        Arbitrary_NTT_Solver::mul(a, len - 1, p.a, p.len - 1, ret.a, MOD, &ret.len);
         return ret;
     }
 
@@ -234,7 +261,7 @@ struct BigNumber
         int print_len = 0, is_neg = 0;
         if (!f && (len > 1 || a[0] != 0))
             ch[print_len++] = '-', is_neg = 1;
-        int x = a[len - 1];
+        ll x = a[len - 1];
         while (x)
             ch[print_len++] = (x % base_radix) ^ '0', x /= base_radix;
         for (int i = is_neg; i < print_len + is_neg - 1 - i; i++)
@@ -256,7 +283,7 @@ struct BigNumber
         // printf("%s", ch);
         puts(ch);
         delete ch;
-    }    
+    }
     ~BigNumber() { delete a; }
 };
 struct fastIO
