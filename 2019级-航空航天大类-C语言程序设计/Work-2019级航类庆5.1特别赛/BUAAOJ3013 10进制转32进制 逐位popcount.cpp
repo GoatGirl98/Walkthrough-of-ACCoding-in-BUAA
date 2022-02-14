@@ -13,7 +13,7 @@ struct fastIO
         setvbuf(stdin, inbuf, _IOFBF, BUFF_SZ);
         setvbuf(stdout, outbuf, _IOFBF, BUFF_SZ);
     }
-}; // IO;
+} IO;
 // NTT Solver : use for multiple case : n | (p - 1)
 // primitive root : 3
 // 998244353  (2^23 * 7 * 17 + 1)
@@ -37,7 +37,7 @@ namespace Arbitrary_NTT_Solver
         }
         return ret;
     }
-    const int N = (1 << 10) | 3;
+    const int N = (1 << 9) | 3;
     // modulo 3
     const int M[3] = {1004535809, 1007681537, 1045430273}, proot = 3;
     const lll all_mod = (lll)1004535809 * (lll)1007681537 * (lll)1045430273;
@@ -105,7 +105,7 @@ namespace Arbitrary_NTT_Solver
     struct initializer
     {
         // length is adjustable
-        initializer() { init(10); }
+        initializer() { init(9); }
     } arbitrary_ntt_init;
     void arbitrary_ntt(MOD3 a[], int lgn, int flag)
     {
@@ -209,10 +209,12 @@ struct sheet_initializer
             char_to_num['0' + i] = i, num_to_char[i] = '0' + i;
 
         for (int i = 10; i < 36; i++)
-            char_to_num['A' - 10 + i] = i - 10;
+            char_to_num['A' - 10 + i] = i, num_to_char[i] = 'A' - 10 + i;
 
+        for (int i = 36; i < 62; i++)
+            char_to_num['a' - 36 + i] = i, num_to_char[i] = 'a' - 36 + i;
     }
-} char_init;
+}char_init;
 // Arbitrary radix from 2 to 62
 struct BigNumber
 {
@@ -231,7 +233,7 @@ struct BigNumber
         MOD = digit[MODD];
     }
     BigNumber() { a = new int[1], a[0] = 0, f = 1, len = 1, init(10); }
-    BigNumber(int x, int _base)
+    BigNumber(int x, int _base = 10)
     {
         init(_base);
         if (x == 0)
@@ -254,7 +256,7 @@ struct BigNumber
                 a[len++] = sum;
         }
     }
-    BigNumber(const char *s, int _base)
+    BigNumber(const char *s, int _base = 10)
     {
         init(_base);
         int slen = strlen(s);
@@ -281,25 +283,24 @@ struct BigNumber
         if (len == 0)
             len = 1, a[0] = 0, f = true;
     }
-    /*
+    
     BigNumber(const BigNumber &o)
     {
-        if (a)
-            delete a;
         init(o.base_radix);
         len = o.len, f = o.f, a = new int[len];
         memcpy(a, o.a, len * sizeof(o.a[0]));
     }
-    void operator=(const BigNumber &o)
+    void operator=(const BigNumber &p)
     {
-        if (a)
+        if (a != NULL)
             delete a;
-        init(o.base_radix);
-        len = o.len, f = o.f, a = new int[len];
-        memcpy(a, o.a, len * sizeof(o.a[0]));
+        len = p.len, f = p.f;
+        a = new int[len];
+        memcpy(a, p.a, len * sizeof(int));
+        init(p.base_radix);
     }
-    ~BigNumber() { if(a) delete a; }
-    */
+    ~BigNumber() { delete a; }
+
     // only for trans, so ignore diffrent positive and negative
     BigNumber operator+(const BigNumber &o) const
     {
@@ -332,57 +333,32 @@ struct BigNumber
         return ret;
     }
 
-    BigNumber trans(int out_radix) const;
+    int popcount() const;
 
-    void output() const
-    {
-        char *ch = new char[500500];
-        int print_len = 0, is_neg = 0;
-        if (!f && (len > 1 || a[0] != 0))
-            ch[print_len++] = '-', is_neg = 1;
-        int x = a[len - 1];
-        while (x)
-            ch[print_len++] = num_to_char[x % base_radix], x /= base_radix;
-        for (int i = is_neg; i < print_len + is_neg - 1 - i; i++)
-            ch[i] ^= ch[print_len + is_neg - 1 - i], ch[print_len + is_neg - 1 - i] ^= ch[i], ch[i] ^= ch[print_len + is_neg - 1 - i];
-        for (int i = len - 2; i >= 0; i--)
-        {
-            x = a[i];
-            int k = MODD - 1;
-            while (x)
-                ch[print_len + k] = num_to_char[x % base_radix], x /= base_radix, k--;
-            while (k >= 0)
-                ch[print_len + k] = '0', k--;
-            print_len += MODD;
-        }
-        if (print_len == 0)
-            ch[print_len++] = '0';
-        ch[print_len] = '\0';
-        puts(ch);
-        delete ch;
-    }
 };
 BigNumber f_gap[20], stack_bignum[20];
 int stack_num[20];
-BigNumber BigNumber::trans(int out_radix) const
+struct popcount_init
 {
-    int n = len;
-    int K = 1, k = 0;
-    while (K < n)
-        K <<= 1, ++k;
+    popcount_init()
+    {
+        f_gap[0] = BigNumber(100000, 32);
+        for (int i = 1; i <= 8; ++i)
+            f_gap[i] = f_gap[i - 1] * f_gap[i - 1];
+    }
+} pop_init;
+
+int BigNumber::popcount() const
+{
     // BigNumber* f_gap = new BigNumber[k + 1];
     // BigNumber f_gap[k + 1];
-    f_gap[0] = BigNumber(MOD, out_radix);
-    for (int i = 1; i <= k; ++i)
-        f_gap[i] = f_gap[i - 1] * f_gap[i - 1];
     // BigNumber* stack_bignum = new BigNumber[k + 1];
-
     // int stack_num[k + 1];
     int top = 0;
-    for (int i = 0; i < n; ++i)
+    for (int i = 0; i < len; ++i)
     {
         int cur_num = a[i];
-        BigNumber b = BigNumber(cur_num, out_radix);
+        BigNumber b = BigNumber(cur_num, 32);
         int level = 1;
         while (top && stack_num[top] == level)
             b = (b * f_gap[level - 1]) + stack_bignum[top--], ++level;
@@ -393,22 +369,22 @@ BigNumber BigNumber::trans(int out_radix) const
         ret = (ret * f_gap[stack_num[i] - 1]) + stack_bignum[i];
 
     ret.f = f;
-    return ret;
+    int res = 0;
+    for (int i = 0; i < ret.len; ++i)
+        res += __builtin_popcount(ret.a[i]);
+    return res;
 }
 int in_radix, out_radix;
 char s[100010];
-BigNumber a, b, c, d;
-int t;
+BigNumber a, b;
+int T;
 int main()
 {
-
-    scanf("%s", s);
-    // printf("%d %s\n%d ", in_radix, s, out_radix);
-    a = BigNumber(s, 26);
-    int len = strlen(s);
-    for (int i = 0; i < len; ++i)
-        s[i] = '1';
-    c = BigNumber(s, 26);
-    b = a.trans(10), d = c.trans(10);
-    (b + d).output();
+    scanf("%d", &T);
+    while (T--)
+    {
+        scanf("%s", s);
+        a = BigNumber(s);
+        printf("%d\n", a.popcount());
+    }
 }

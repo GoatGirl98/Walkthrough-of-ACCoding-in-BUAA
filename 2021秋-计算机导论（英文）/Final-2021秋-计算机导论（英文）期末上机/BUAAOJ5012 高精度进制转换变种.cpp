@@ -37,7 +37,7 @@ namespace Arbitrary_NTT_Solver
         }
         return ret;
     }
-    const int N = (1 << 10) | 3;
+    const int N = (1 << 17) | 3;
     // modulo 3
     const int M[3] = {1004535809, 1007681537, 1045430273}, proot = 3;
     const lll all_mod = (lll)1004535809 * (lll)1007681537 * (lll)1045430273;
@@ -105,7 +105,7 @@ namespace Arbitrary_NTT_Solver
     struct initializer
     {
         // length is adjustable
-        initializer() { init(10); }
+        initializer() { init(17); }
     } arbitrary_ntt_init;
     void arbitrary_ntt(MOD3 a[], int lgn, int flag)
     {
@@ -206,10 +206,10 @@ struct sheet_initializer
     sheet_initializer()
     {
         for (int i = 0; i < 10; i++)
-            char_to_num['0' + i] = i, num_to_char[i] = '0' + i;
+            char_to_num['0' + i] = i;
 
         for (int i = 10; i < 36; i++)
-            char_to_num['A' - 10 + i] = i - 10;
+            num_to_char[i - 10 + 1] = 'A' + i - 10;
 
     }
 } char_init;
@@ -281,25 +281,23 @@ struct BigNumber
         if (len == 0)
             len = 1, a[0] = 0, f = true;
     }
-    /*
+    
     BigNumber(const BigNumber &o)
     {
-        if (a)
-            delete a;
         init(o.base_radix);
         len = o.len, f = o.f, a = new int[len];
         memcpy(a, o.a, len * sizeof(o.a[0]));
     }
-    void operator=(const BigNumber &o)
+    void operator=(const BigNumber &p)
     {
-        if (a)
+        if (a != NULL)
             delete a;
-        init(o.base_radix);
-        len = o.len, f = o.f, a = new int[len];
-        memcpy(a, o.a, len * sizeof(o.a[0]));
+        len = p.len, f = p.f;
+        a = new int[len];
+        memcpy(a, p.a, len * sizeof(int));
+        init(p.base_radix);
     }
-    ~BigNumber() { if(a) delete a; }
-    */
+    ~BigNumber() { delete a; }
     // only for trans, so ignore diffrent positive and negative
     BigNumber operator+(const BigNumber &o) const
     {
@@ -342,7 +340,7 @@ struct BigNumber
             ch[print_len++] = '-', is_neg = 1;
         int x = a[len - 1];
         while (x)
-            ch[print_len++] = num_to_char[x % base_radix], x /= base_radix;
+            ch[print_len++] = x % base_radix, x /= base_radix;
         for (int i = is_neg; i < print_len + is_neg - 1 - i; i++)
             ch[i] ^= ch[print_len + is_neg - 1 - i], ch[print_len + is_neg - 1 - i] ^= ch[i], ch[i] ^= ch[print_len + is_neg - 1 - i];
         for (int i = len - 2; i >= 0; i--)
@@ -350,15 +348,23 @@ struct BigNumber
             x = a[i];
             int k = MODD - 1;
             while (x)
-                ch[print_len + k] = num_to_char[x % base_radix], x /= base_radix, k--;
+                ch[print_len + k] = x % base_radix, x /= base_radix, k--;
             while (k >= 0)
-                ch[print_len + k] = '0', k--;
+                ch[print_len + k] = 0, k--;
             print_len += MODD;
         }
         if (print_len == 0)
-            ch[print_len++] = '0';
+            ch[print_len++] = 0;
         ch[print_len] = '\0';
-        puts(ch);
+        for (int i = print_len - 1; ~i; --i)
+            if (i && ch[i] <= 0)
+                ch[i] += 26, --ch[i - 1];
+        int st = 0;
+        if (!ch[st])
+            ++st;
+        for (int i = st; i < print_len; ++i)
+            ch[i] = num_to_char[ch[i]];
+        puts(ch + st);
         delete ch;
     }
 };
@@ -401,14 +407,7 @@ BigNumber a, b, c, d;
 int t;
 int main()
 {
-
-    scanf("%s", s);
-    // printf("%d %s\n%d ", in_radix, s, out_radix);
-    a = BigNumber(s, 26);
-    int len = strlen(s);
-    for (int i = 0; i < len; ++i)
-        s[i] = '1';
-    c = BigNumber(s, 26);
-    b = a.trans(10), d = c.trans(10);
-    (b + d).output();
+    scanf("%d", &t);
+    while(t--)
+        scanf("%s", s), a = BigNumber(s, 10), b = a.trans(26), b.output();
 }
