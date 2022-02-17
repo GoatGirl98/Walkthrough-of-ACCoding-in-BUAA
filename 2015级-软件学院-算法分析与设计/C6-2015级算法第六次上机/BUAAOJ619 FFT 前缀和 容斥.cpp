@@ -5,52 +5,26 @@
 #include <algorithm>
 using namespace std;
 typedef long long ll;
-namespace FastIO
+// fast input
+char buf[1 << 21], *p1 = buf, *p2 = buf;
+inline char nc() { return p1 == p2 && (p2 = (p1 = buf) + fread(buf, 1, 1 << 21, stdin), p1 == p2) ? EOF : *p1++; }
+int rd()
 {
-    char buf[1 << 21], *p1 = buf, *p2 = buf;
-    inline char nc() { return p1 == p2 && (p2 = (p1 = buf) + fread(buf, 1, 1 << 21, stdin), p1 == p2) ? EOF : *p1++; }
-    int rd()
+    int ret = 0;
+    char ch = nc();
+
+    while (ch < '0' || ch > '9')
+        ch = nc();
+
+    while (ch >= '0' && ch <= '9')
     {
-        int ret = 0;
-        char ch = nc();
- 
-        while (ch < '0' || ch > '9')
-            ch = nc();
- 
-        while (ch >= '0' && ch <= '9')
-        {
-            ret = (ret << 1) + (ret << 3) + (ch ^ 48);
-            ch = nc();
-        }
- 
-        return ret;
+        ret = (ret << 1) + (ret << 3) + (ch ^ 48);
+        ch = nc();
     }
-    char Buf[1 << 21], out[20];
-    int P, out_size;
-    void flush() { fwrite(Buf, 1, out_size, stdout), out_size = 0; }
-    void wt(ll x)
-    {
-        if (out_size >= 1 << 20)
-            flush();
- 
-        if (x < 0)
-            Buf[out_size++] = 45, x = -x;
- 
-        do
-            out[++P] = (x % 10) ^ 48;
-        while (x /= 10);
- 
-        do
-            Buf[out_size++] = out[P];
-        while (--P);
-        Buf[out_size++] = '\n';
-    }
-    struct IOFlush
-    {
-        ~IOFlush() { flush(); }
-    } tail;
+
+    return ret;
 }
-using namespace FastIO;
+
 // FFT Solver : use for multiple case
 namespace FFT_Solver
 {
@@ -183,29 +157,44 @@ namespace FFT_Solver
     }
 }
 const int maxn = 100010;
-int T, n, m;
-int a[maxn], num[maxn], x;
+int T, n;
+int a[maxn], num[maxn];
 ll sum[maxn << 1], res_len;
 int main()
 {
     T = rd();
     while (T--)
     {
-        n = rd(), m = rd();
+        n = rd();
         memset(num, 0, sizeof(num));
         for (int i = 0; i < n; ++i)
             a[i] = rd(), ++num[a[i]];
+        sort(a, a + n), res_len = (a[n - 1] << 1);
         // FFT 用于计算 2 数加和为x的取值数(区分顺序+允许取相同两个)
-        FFT_Solver::mul(num, 100000, num, 100000, sum);
+        FFT_Solver::mul(num, a[n - 1], num, a[n - 1], sum);
         // 减去取相同两个的
         for (int i = 0; i < n; ++i)
             sum[a[i] << 1]--;
         // 由于选择无序，所以要除以2
-        for (int i = 0; i <= 200000; ++i)
+        for (int i = 2; i <= res_len; ++i)
             sum[i] >>= 1;
-        for (int i = 1; i <= 200000; ++i)
+        // 前缀和 sum[i] 由两数加和为i的个数 变为 两数加和小于等于i的个数
+        sum[0] = 0;
+        for (int i = 1; i <= res_len; ++i)
             sum[i] += sum[i - 1];
-        while (m--)
-            x = rd(), wt(sum[x - 1]);
+        ll sol = 0; // 计算有效的三角形方案
+        for (int i = 0; i < n; ++i)
+        {
+            // 每一次取大于a[i]的两个木棍，但是需要去重
+            sol += sum[res_len] - sum[a[i]];
+            // 1.一根序号比自己大 另一个序号比自己小
+            sol -= 1ll * (n - 1 - i) * i;
+            // 2.一根取自己 另一根随便挑
+            sol -= 1ll * (n - 1);
+            // 3.两个序号都比自己大
+            sol -= (1ll * (n - 1 - i) * (n - i - 2)) >> 1;
+        }
+        ll tot = (1ll * n * (n - 1) * (n - 2)) / 6; // 总数为C(n,3)
+        printf("%.6f\n", (double)sol / (double)tot);
     }
 }
