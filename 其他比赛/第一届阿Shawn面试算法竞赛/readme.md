@@ -390,7 +390,19 @@ Print the number of Good Reverse Tuple.
 
 ## 思路
 
-本题数据范围较小，直接暴力就完事了
+本题数据范围较小，直接暴力就完事了，复杂度是 $O(\cfrac{n^3}{6})$，可以勉强在n为1000的时候在1s之内卡过。
+
+然而由本题输入的每个数的数据范围可得，在 $n$ 更大的时候，本题拥有依然可以在1s内通过的做法。
+
+我们可以考虑生成函数+容斥
+
+假设取1个数的多项式是 $A$ 取2个一样的数多项式是 $B$ 取3个一样的数多项式是 $C$
+
+本题可以将 nums[i] + nums[j] + nums[k] = revNum(nums[i]) + revNum(nums[j]) + revNum(nums[k]) 改为 (nums[i] -  revNum(nums[i])) + (nums[j] - revNum(nums[j])) + (nums[k] - revNum(nums[k])) = 0
+
+然后我们可以将每个数当做背包， num[i] - revNum(nums[i]) 为其价值，重量为1，背包容量为3，需要恰好装满，且总价值为0。
+
+取三个不同数的方案为 $(A^3-3AB+2C)/6$。剩下的只需要做FFT即可。需要注意的是，价值可能为负，所以我们要对价值加上1000，再做FFT。然后多项式的3000次项的系数即为所求。
 
 # `G` DS = Data structure of Shawn's
 
