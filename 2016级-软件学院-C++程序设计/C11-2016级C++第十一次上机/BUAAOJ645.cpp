@@ -1,5 +1,4 @@
-#include<cstdio>
-#define maxn 5000010
+#include<stdio.h>
 int tmpint;
 int n;
 int ans;
