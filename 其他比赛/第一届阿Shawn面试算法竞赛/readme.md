@@ -338,6 +338,8 @@ An integer
 
 矩阵链乘dp经典问题
 
+除了经典的 $O(n^3)$ 算法，该问题拥有 $O(n\log n)$ 的 "Hu-shing Algorithm" ，该算法在《算法导论》中也提及了一次，这里给一个来自他人的代码实例，以供参考。此外，对于原本的 $O(n^3)$ 还可以进行并行优化。
+
 # `F` Find Good Reverse Tuple
 
 时间限制：1000ms  内存限制：65536kb

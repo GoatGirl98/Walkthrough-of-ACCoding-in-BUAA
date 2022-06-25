@@ -1,11 +1,11 @@
-#include<cstdio>
+#include<stdio.h>
 #define maxn 310
 #define INF 0x3f3f3f3f
 typedef unsigned long long ull;
 int m[maxn][maxn], s[maxn][maxn];
 int a[maxn];
 int n;
-inline void buildDP_Matrixchain() {
+void buildDP_Matrixchain() {
     for (int l = 2; l <= n; ++l) {
         for (int i = 1; i <= n - l + 1; ++i) {
             int j = i + l - 1;
@@ -17,7 +17,7 @@ inline void buildDP_Matrixchain() {
         }
     }
 }
-inline void print_Matrix(int i, int j) {
+void print_Matrix(int i, int j) {
     if (i == j)printf("A%d", i);
     else {
         putchar('(');
@@ -31,7 +31,7 @@ int main() {
         for (int i = 0; i <= n; ++i) scanf("%d", a + i);
         for (int i = 0; i <= n; ++i)m[i][i] = 0;
         buildDP_Matrixchain();
-        printf("%d\n", m[1][n]);
+        // printf("%d\n", m[1][n]);
         print_Matrix(1, n);
         putchar('\n');
     }
