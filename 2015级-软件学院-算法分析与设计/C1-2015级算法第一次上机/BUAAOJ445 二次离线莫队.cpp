@@ -1,190 +1,201 @@
-#include<stdio.h>
-#include<vector>
-#include<string.h>
-#include<ctype.h>
-#include<math.h>
-#include<algorithm>
-#define getchar getchar_unlocked
-#define putchar putchar_unlocked
+#include <stdio.h>
+#include <vector>
+#include <algorithm>
 using namespace std;
-typedef long long ll;
-const int maxn = 10005;
-
-int rd() {
+typedef long long i64;
+bool eof_flag;
+bool rd(int *s)
+{
+    if (eof_flag)
+        return 0;
     int k = 0, f = 1;
     char c = getchar();
-    while (!isdigit(c)) {
-        if (c == '-')f = -1;
+    while (c != '-' && (c < '0' || c > '9'))
+    {
+        if (c == EOF)
+        {
+            eof_flag = 1;
+            return 0;
+        }
         c = getchar();
     }
-    while (isdigit(c)) {
-        k = (k << 1) + (k << 3) + c - 48;
-        c = getchar();
-    }
-    return k * f;
+    f = (c == '-') ? -1 : 1;
+    k = (c == '-') ? 0 : (c ^ 48);
+    c = getchar();
+    while (c >= '0' && c <= '9')
+        k = (k << 1) + (k << 3) + (c ^ 48), c = getchar();
+    if (c == EOF)
+        eof_flag = 1;
+    (*s) = f > 0 ? k : -k;
+    return 1;
 }
-void wr(ll x) {
-    if (x < 0) putchar('-'), x = -x;
-    if (x > 9)wr(x / 10);
+void wr(i64 x)
+{
+    if (x > 9)
+        wr(x / 10);
     putchar(x % 10 + '0');
 }
+struct range_inversions_query_offline
+{
+    static const int bucket = 350; // n <= 100000
+    int array_size;
+    struct query
+    {
+        int l, r, idx;
+        bool operator<(const query &t) const
+        {
+            if (l / bucket != t.l / bucket)
+                return l / bucket < t.l / bucket;
 
-int n, m, uni, a[maxn], block, A[maxn], L = 1, R;
-ll _l[maxn], _r[maxn], b[maxn], ec[maxn], cnt[maxn];
-
-inline int getposition(register int i) { return (i - 1) / block + 1; } // 所在的块
-
-struct Node {
-    int l, r, id;
-    bool operator<(const Node& o) const {
-        if (l / block == o.l / block) {
-            return r < o.r;
+            else
+                return ((l / bucket) & 1) ? r < t.r : r > t.r;
         }
-        return l < o.l;
+
+        query(int _l = 0, int _r = 0, int _idx = 0) { l = _l, r = _r, idx = _idx; }
+    };
+    struct range_query
+    {
+        int l, r, mult, idx;
+        bool type;
+
+        range_query(int _l = 0, int _r = 0, int _mult = 0, int _idx = 0, bool _type = 0)
+        {
+            l = _l, r = _r, mult = _mult, idx = _idx, type = _type;
+        }
+    };
+
+    vector<query> queries;
+    vector<vector<int>> val1, val2;
+    vector<vector<range_query>> to_add;
+
+    vector<int> lazy, val;
+    inline int get(int idx) const { return lazy[(idx - 1) / bucket] + val[idx]; }
+    inline int get_bigger(int idx) const { return get(idx + 1); }
+    inline int get_smaller(int idx) const { return get(1) - get(idx); }
+
+    void update(int idx)
+    {
+        int bucket_idx = (idx - 1) / bucket;
+        for (int i = 0; i < bucket_idx; i++)
+            lazy[i]++;
+
+        for (int i = bucket_idx * bucket + 1; i <= idx; i++)
+            val[i]++;
     }
-} nodes[maxn];
 
-struct vnode {
-    int l, r, id, x;
-    vnode(int _l = 0, int _r = 0, int _id = 0, int _x = 0) :l(_l), r(_r), id(_id), x(_x) {}
-};
-vector<vnode> __l[maxn], __r[maxn];
+    vector<int> a;
 
-struct BIT {
-    int a[maxn];
-    int n;
-    inline int lowbit(int x) { return (x & (-x)); }
+    range_inversions_query_offline() {}
+    range_inversions_query_offline(const vector<int>& _a)
+    {
+        int n = _a.size();
+        array_size = n;
+        a.resize(n + 3);
+        vector<int> tmp_a(n);
+        for (int i = 0; i < n; ++i)
+            tmp_a[i] = _a[i];
+        sort(tmp_a.begin(), tmp_a.end());
+        for (int i = 0; i < n; ++i)
+            a[i + 1] = lower_bound(tmp_a.begin(), tmp_a.end(), _a[i]) - tmp_a.begin() + 1;
 
-    inline void add(int x) { // 加
-        while (x <= n) {
-            a[x]++;
-            x += lowbit(x);
-        }
+        lazy.resize(100010);
+        val.resize(100010);
+
+        val1.resize(n + 1), val2.resize(n + 1);
+        for (int i = 0; i <= n; ++i)
+            val1[i].resize(2), val2[i].resize(2);
+        to_add.resize(n + 1);
     }
 
-    inline int sum(int x) {
-        int ans = 0;
-        while (x) {
-            ans += a[x];
-            x -= lowbit(x);
+    vector<i64> solve(const vector<pair<int, int>> &qu)
+    {
+        int q = qu.size();
+        queries.resize(q + 1);
+        for (int i = 0; i < q; ++i)
+        {
+            queries[i + 1].l = qu[i].first;
+            queries[i + 1].r = qu[i].second;
+            queries[i + 1].idx = i + 1;
         }
+        sort(queries.begin() + 1, queries.end());
+
+        vector<i64> ans(q);
+
+        int l = 1, r = 1;
+        for (int i = 1; i <= q; i++)
+        {
+            if (queries[i].r > r)
+                to_add[l - 1].push_back(range_query(r + 1, queries[i].r, -1, queries[i].idx, true)), r = queries[i].r;
+
+            if (queries[i].l < l)
+                to_add[r].push_back(range_query(queries[i].l, l - 1, 1, queries[i].idx, false)), l = queries[i].l;
+
+            if (queries[i].r < r)
+                to_add[l - 1].push_back(range_query(queries[i].r + 1, r, 1, queries[i].idx, true)), r = queries[i].r;
+
+            if (queries[i].l > l)
+                to_add[r].push_back(range_query(l, queries[i].l - 1, -1, queries[i].idx, false)), l = queries[i].l;
+        }
+
+        for (int i = 1; i <= array_size; i++)
+        {
+            update(a[i]);
+            val1[i][0] = get_bigger(a[i]);
+            val1[i][1] = get_smaller(a[i]);
+            val2[i][0] = get_bigger(a[i + 1]);
+            val2[i][1] = get_bigger(a[i + 1]);
+
+            for (const range_query &j : to_add[i])
+            {
+                int add = 0;
+                for (int k = j.l; k <= j.r; k++)
+                    add += (j.type ? get_bigger(a[k]) : get_smaller(a[k]));
+
+                ans[j.idx - 1] += 1ll * j.mult * add;
+            }
+        }
+
+        l = r = 1;
+        for (int i = 1; i <= q; i++)
+        {
+            if (i != 1)
+                ans[queries[i].idx - 1] += ans[queries[i - 1].idx - 1];
+
+            while (r < queries[i].r)
+                ans[queries[i].idx - 1] += val2[r][0], r++;
+
+            while (l > queries[i].l)
+                ans[queries[i].idx - 1] -= val1[l - 1][1], l--;
+
+            while (r > queries[i].r)
+                ans[queries[i].idx - 1] -= val2[r - 1][0], r--;
+
+            while (l < queries[i].l)
+                ans[queries[i].idx - 1] += val1[l][1], l++;
+        }
+
         return ans;
     }
+};
 
-    inline void init(int _n) {
-        n = _n;
-        for (int i = 0; i <= n; ++i)a[i] = 0;
-    }
-} bit;
-
-inline void addL(int a) {
-    for (int i = a; i >= (getposition(a) - 1) * block + 1; --i) {
-        cnt[i]++;
-    }
-    for (int i = getposition(a) - 1; i; --i) {
-        ec[i]++;
-    }
-}
-
-inline void addR(int a, int uni) {
-    for (int i = a; i <= (getposition(a) - 1) * block + block; ++i) {
-        cnt[i]++;
-    }
-    for (int i = getposition(a) + 1; i <= getposition(uni); ++i) {
-        ec[i]++;
-    }
-}
-
-inline int calc(int a) {
-    register int ans = cnt[a];
-    ans += ec[getposition(a)];
-    return ans;
-}
-
-inline void solve() {
-    L = 1, R = 0;
-    bit.init(n);
-    sort(nodes + 1, nodes + m + 1);
-    for (int i = 1; i <= n; ++i) {
-        _l[i] = _l[i - 1] + bit.sum(n) - bit.sum(a[i]);
-        bit.add(a[i]);
-    }
-    bit.init(n);
-    for (int i = n; i; --i) {
-        _r[i] = _r[i + 1] + bit.sum(a[i] - 1);
-        bit.add(a[i]);
-    }
-    for (int i = 1; i <= m; ++i) {
-        int l = nodes[i].l, r = nodes[i].r, id = nodes[i].id;
-        if (R < r) {
-            __l[L - 1].push_back(vnode(R + 1, r, id, 0));
-            b[id] += _l[r] - _l[R];
-        }
-        if (R > r) {
-            __l[L - 1].push_back(vnode(r + 1, R, id, 1));
-            b[id] -= _l[R] - _l[r];
-        }
-        if (L > l) {
-            __r[r + 1].push_back(vnode(l, L - 1, id, 0));
-            b[id] += _r[l] - _r[L];
-        }
-        if (L < l) {
-            __r[r + 1].push_back(vnode(L, l - 1, id, 1));
-            b[id] -= _r[L] - _r[l];
-        }
-        L = l, R = r;
-    }
-    for (int i = 1; i <= n; ++i) {
-        addL(a[i] - 1);
-        for (vnode& x : __l[i]) {
-            int l = x.l, r = x.r, id = x.id, _x = x.x;
-            ll tmp = 0;
-            for (int j = l; j <= r; ++j) tmp += calc(a[j]);
-            if (_x) b[id] += tmp;
-            else b[id] -= tmp;
-        }
-    }
-    memset(ec, 0, sizeof(ec));
-    memset(cnt, 0, sizeof(cnt));
-    for (int i = n; i; --i) {
-        addR(a[i] + 1, uni);
-        for (vnode& x : __r[i]) {
-            register int l = x.l, r = x.r, id = x.id, _x = x.x;
-            register ll tmp = 0;
-            for (register int j = l; j <= r; ++j)  tmp += calc(a[j]);
-            if (_x)  b[id] += tmp;
-            else b[id] -= tmp;
-        }
-    }
-    for (int i = 1; i <= m; ++i) {
-        int id = nodes[i].id;
-        b[id] += b[nodes[i - 1].id];
-    }
-}
-
-inline void init() {
-    memset(a, 0, sizeof(a)), memset(A, 0, sizeof(A));
-    memset(_l, 0, sizeof(_l)), memset(_r, 0, sizeof(_r));
-    memset(b, 0, sizeof(b)), memset(ec, 0, sizeof(ec)), memset(cnt, 0, sizeof(cnt));
-    for (int i = 0; i <= n; ++i)__l[i].clear(), __r[i].clear();
-}
-
-int main() {
-    while (scanf("%d", &n) != EOF) {
-        init();
-        block = sqrt(n);
-        for (int i = 1; i <= n; ++i)
-            A[i] = a[i] = rd();
-        sort(A + 1, A + n + 1);
-        uni = unique(A + 1, A + n + 1) - A - 1;
-        m = rd();
-        for (int i = 1; i <= n; ++i)
-            a[i] = lower_bound(A + 1, A + uni + 1, a[i]) - A;
-
-        for (int i = 1; i <= m; ++i)
-            nodes[i].l = rd() + 1, nodes[i].r = rd() + 1, nodes[i].id = i;
-        solve();
-        for (int i = 1; i <= m; ++i)
-            wr(b[i]), putchar('\n');
+int n, q;
+vector<int> a;
+vector<pair<int, int>> qu;
+int x, l, r;
+int main()
+{
+    while (rd(&n))
+    {
+        a.resize(n);
+        for (int i = 0; i < n; ++i)
+            rd(&x), a[i] = x;
+        range_inversions_query_offline riq(a);
+        rd(&q);
+        qu.resize(q);
+        for (int i = 0; i < q; ++i)
+            rd(&l), qu[i].first = l + 1, rd(&r), qu[i].second = r + 1;
+        vector<i64> ans = riq.solve(qu);
+        for (int i = 0; i < q; ++i)
+            wr(ans[i]), putchar('\n');
     }
 }
