@@ -1,11 +1,11 @@
 #include <stdio.h>
 typedef unsigned long long ull;
-#define maxn 1200010
+#define maxn 114514
 #define mod 23333
 struct hash
 {
     ull num;
-    int cnt, nxt;
+    ull cnt, nxt;
 } list[maxn];
 int head[mod], cnt;
 int hashcode(ull x) { return x % mod; }
@@ -30,18 +30,21 @@ void add(ull x)
     else
         ++list[idx].cnt;
 }
-int n; ull x;
+int n; 
+ull a[100010];
 int query(ull x) { return find(x, 1); }
 int main()
 {
-    int ans = 0; scanf("%d", &n);
-    while (n--)
+    ull ans = 0; 
+    scanf("%d", &n);
+    for (int i = 0; i < n; ++i)
+        scanf("%llu", &a[i]);
+    for (int i = 0; i < n; ++i)
     {
-        scanf("%llu", &x);
-        ans += query(x);
-        for (int i = 1; i < 64; ++i)
-            if (x < (1ull << i))
-                add((1ull << i) - x);
+        for (int j = 0; j < 64; ++j)
+            if ((1ull << j) > a[i])
+                ans += query((1ull << j) - a[i]);
+        add(a[i]);
     }
-    printf("%d", ans);
+    printf("%llu", ans);
 }

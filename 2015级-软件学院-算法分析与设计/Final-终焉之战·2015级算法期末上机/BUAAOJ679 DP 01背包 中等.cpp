@@ -2,7 +2,6 @@
 #include<cstring>
 #include<vector>
 #define maxn 510
-#define print 0
 using namespace std;
 //×ÛºÏdp
 int n, k;
@@ -21,8 +20,6 @@ inline void initDP() {
 inline void initialize(int i) {
 	dp[a[i]][0] = true;
 	dp[a[i]][a[i]] = true;
-	if (print)cout << a[i] << " 0 is true" << endl;
-	if (print)cout << a[i] << " " << a[i] << " is true" << endl;
 }
 
 inline void buildDP() {
@@ -37,20 +34,17 @@ inline void buildDP() {
 						dp[j][lala] = dp[j][lala] || dp[j - a[i]][lala];
 						if (dp[j][lala]) {
 							if(dp[j - a[i]][lala])temp.push_back(lala);
-							if (print)cout << "in loop " << i << " : " << j << " " << lala << "is true" << endl;
 						}
 					}
 					
 					for (int lala : temp) { 
 						if (lala + a[i] <= j) {
 							dp[j][lala + a[i]] = true;
-							if (print)cout << "in loop " << i << " : " << j << " " << lala + a[i] << "is true" << endl;
 						}
 					}
 
 					
 					dp[j][j] = true;
-					if (print)cout << "in loop " << i << " : " << j << " " << j << "is true" << endl;
 				}	
 			}
 		}
