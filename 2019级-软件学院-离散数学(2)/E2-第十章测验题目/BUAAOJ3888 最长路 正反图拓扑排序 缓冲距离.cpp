@@ -82,7 +82,7 @@ void bfs_g() {
     }
 }
 void bfs_e() {
-    for(int i = 1; i <= n; ++i) if(out[i] == 0) gq.push(i);
+    for(int i = 1; i <= n; ++i) if(out[i] == 0) eq.push(i);
     eq.push(t);
     TL[t] = TE[t];
     while(!eq.empty()) {
