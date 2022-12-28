@@ -98,8 +98,8 @@ struct range_inversions_query_offline
         for (int i = 0; i < n; ++i)
             a[i + 1] = lower_bound(tmp_a.begin(), tmp_a.end(), _a[i]) - tmp_a.begin() + 1;
 
-        lazy.resize(100010);
-        val.resize(100010);
+        lazy.resize(n + 3);
+        val.resize(n + 3);
 
         val1.resize(n + 1), val2.resize(n + 1);
         for (int i = 0; i <= n; ++i)
