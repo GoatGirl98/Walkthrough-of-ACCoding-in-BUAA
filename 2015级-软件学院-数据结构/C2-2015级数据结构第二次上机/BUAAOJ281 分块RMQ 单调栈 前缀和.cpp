@@ -195,6 +195,6 @@ int main()
     while (q--)
     {
         int l = FastIO::rd(), r = FastIO::rd() - 1;
-        FastIO::wr(solve(l, r));
+        FastIO::wr(l > r ? 0 : solve(l, r));
     }
 }
