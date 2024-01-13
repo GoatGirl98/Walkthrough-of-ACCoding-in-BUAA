@@ -42,6 +42,17 @@ void dfs(int x, int y, int st_x, int st_y, int ed_x, int ed_y, int turn, int dir
         flag = 1;
     if (flag)
         return;
+    if (turn == 1)
+    {
+        if (x < ed_x && dir == 0)
+            return;
+        if (x > ed_x && dir == 2)
+            return;
+        if (y < ed_y && dir == 1)
+            return;
+        if (y > ed_y && dir == 3)
+            return;
+    }
     if (turn == 2) // important prune : can't turn anymore and couldn't get to goal
     {
         if (x != ed_x && y != ed_y)
