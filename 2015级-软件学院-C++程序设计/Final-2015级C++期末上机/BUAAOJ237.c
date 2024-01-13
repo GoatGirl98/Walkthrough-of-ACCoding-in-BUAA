@@ -42,11 +42,23 @@ void dfs(int x, int y, int st_x, int st_y, int ed_x, int ed_y, int turn, int dir
         flag = 1;
     if (flag)
         return;
+    if (turn == 2) // important prune : can't turn anymore and couldn't get to goal
+    {
+        if (x != ed_x && y != ed_y)
+            return;
+        if (x == ed_x)
+            if (!((y > ed_y && dir == 1) || (y < ed_y && dir == 3)))
+                return;
+        if (y == ed_y)
+            if (!((x > ed_x && dir == 0) || (x < ed_x && dir == 2)))
+                return;
+    }
     if ((x != st_x || y != st_y) && a[x][y])
         return;
     for (int i = 0; i < 4; ++i)
     {
         int nx = x + dx[i], ny = y + dy[i];
+        // prune : dir can't turn 180 degree
         if (!(dir >= 0 && (i - dir == 2 || dir - i == 2)) && inside(nx, ny))
             dfs(nx, ny, st_x, st_y, ed_x, ed_y, (dir < 0 || dir == i) ? turn : turn + 1, i);
     }
