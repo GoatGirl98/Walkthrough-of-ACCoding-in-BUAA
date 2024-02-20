@@ -52,7 +52,7 @@ signed main()
             lo = mi + 1;
     }
 
-    if (hi < m)
+    if (hi <= m)
         printf("-1\n%lld\n", hi);
     else
         puts("0");
