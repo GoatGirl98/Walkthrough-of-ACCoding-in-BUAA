@@ -1,61 +1,87 @@
-#include<cstdio>
-#include<vector>
-#include<cstdlib>
-#include<cstring>
-#include<algorithm>
-#define maxn 10010
-#define maxm 50010
-#define MOD 10000
-using namespace std;
-int n, m, start, finish, cost;
-int x, y, t;
-struct Edges {
-    int u, v, w, next;
-}edges[maxm];
-int que[maxn], tail = 0;
-int inDegree[maxn];
-int inCount[maxn], inTime[maxn];
-int link[maxn];//每个顶点的第一条边的序号
-int cnt;
-inline void addEdge(int u, int v, int w) {
-    edges[++cnt].next = link[u];
-    edges[cnt].u = u, edges[cnt].v = v, edges[cnt].w = w;
-    link[u] = cnt, inDegree[v]++;
+#include <stdio.h>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <queue>
+int rd()
+{
+    int k = 0, f = 1;
+    char s = getchar();
+    while (s < '0' || s > '9')
+        f = (s == '-') ? 0 : f, s = getchar();
+    while (s >= '0' && s <= '9')
+        k = (k << 1) + (k << 3) + (s ^ '0'), s = getchar();
+    return f ? k : -k;
 }
-inline void topoSort() {
-    for (int i = 1; i <= n; ++i)
-        if (inDegree[i] == 0)que[++tail] = i;
-    for (int i = 1; i <= tail; ++i) {
-        for (int k = link[que[tail]]; k > 0; k = edges[k].next) {
-            inDegree[edges[k].v]--;
-            if (inDegree[edges[k].v] == 0)que[++tail] = edges[k].v;
-        }
-        if (tail == n)break;
+void wr(int x)
+{
+    if (x < 0)
+        putchar('-'), x = -x;
+    if (x > 9)
+        wr(x / 10);
+    putchar((x % 10) ^ '0');
+}
+const int N = 10010;
+const int mod = 10000;
+int add(int a, int b) { return (a + b >= mod) ? (a + b - mod) : (a + b); }
+int mul(int a, int b) { return a * b % mod; }
+namespace topo
+{
+    std::vector<std::pair<int, int>> e[N];
+    std::queue<int> q;
+    int f[N], g[N];
+    int in_deg[N], n;
+    int ord[N], cnt;
+    void clr()
+    {
+        for (int i = 0; i < N; ++i)
+            e[i].clear();
+        memset(in_deg, 0, sizeof(in_deg)), cnt = 0;
     }
-}
-inline void buildDP() {
-    inCount[start] = 1; inTime[finish] = 0;
-    for (int j = 1; j <= n; ++j) {
-        int k = que[j];
-        if (link[k] > 0) {
-            for (int i = link[k]; i > 0; i = edges[i].next) {
-                inCount[edges[i].v] = (inCount[edges[i].v] + inCount[k]) % MOD;
-                inTime[edges[i].v] = (inTime[edges[i].v] + inTime[k] + edges[i].w * inCount[k]) % MOD;
+    void init_sz(int _n) { n = _n; }
+    void add_edge(int u, int v, int w) { e[u].push_back({v, w}), ++in_deg[v]; }
+    void solve(int s)
+    {
+        for (int i = 1; i <= n; ++i)
+            if ((i ^ s) && !in_deg[i])
+                ord[++cnt] = i, q.push(i);
+        while (q.size())
+        {
+            int u = q.front();
+            q.pop();
+            for (const std::pair<int, int>& x : e[u])
+            {
+                --in_deg[x.first];
+                if (!in_deg[x.first])
+                    ord[++cnt] = x.first, q.push(x.first);
+            }
+        }
+        q.push(s), f[s] = 1, g[s] = 0;
+        while (q.size())
+        {
+            int u = q.front();
+            q.pop();
+            for (const std::pair<int, int>& x : e[u])
+            {
+                --in_deg[x.first];
+                f[x.first] = add(f[x.first], f[u]), g[x.first] = add(add(g[x.first], g[u]), mul(f[u], x.second)); // dp u -> dp v
+                if (!in_deg[x.first])
+                    ord[++cnt] = x.first, q.push(x.first);
             }
         }
     }
 }
-int main() {
-    scanf("%d%d%d%d%d", &n, &m, &start, &finish, &cost);
-    memset(edges, 0, sizeof(edges));
-    memset(link, -1, sizeof(link));
-    memset(inDegree, 0, sizeof(inDegree));
-    memset(inCount, 0, sizeof(inCount));
-    memset(inTime, 0, sizeof(inTime));
-    for (int i = 1; i <= m; ++i) {
-        scanf("%d%d%d", &x, &y, &t);
-        addEdge(x, y, t);
+int main()
+{
+    int n = rd(), m = rd(), s = rd(), t = rd(), T = rd();
+    T = (T == mod) ? 0 : T;
+    topo::init_sz(n);
+    while (m--)
+    {
+        int u = rd(), v = rd(), w = rd();
+        w = (w == mod) ? 0 : w;
+        topo::add_edge(u, v, w);
     }
-    topoSort(); buildDP();
-    printf("%d\n", (inTime[finish] + (inCount[finish] - 1) * cost) % MOD);
+    topo::solve(s);
+    wr(add(topo::g[t], mul(T, add(topo::f[t], mod - 1))));
 }
